@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Crawler - Third Sun Productions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --purple: #7B68EE;
+  --purple-light: #9B8AFF;
+  --purple-glow: rgba(123,104,238,0.15);
+  --coral: #FF6B6B;
+  --coral-light: #FF8E8E;
+  --peach: #FFAB91;
+  --mint: #5AD8A6;
+  --sky: #64B5F6;
+  --amber: #FFD54F;
+  --lavender: #B8ACF6;
+
+  --bg-body: #0e0e24;
+  --bg-surface: #161637;
+  --bg-raised: #1e1e48;
+  --bg-input: #131330;
+  --border: #2a2a5c;
+  --border-focus: var(--purple);
+  --text: #eeeef8;
+  --text-muted: #8585b0;
+  --text-dim: #555580;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg-body);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Top bar ── */
+.topbar {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.topbar svg { width: 26px; height: 26px; fill: var(--purple-light); }
+.topbar h1 { font-size: 1.15rem; font-weight: 700; color: var(--text); }
+.topbar .tag {
+  margin-left: auto;
+  color: var(--lavender);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* ── Layout ── */
+.main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+.panel-header {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--purple-light);
+}
+
+/* ── Login ── */
+.login-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg-body);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+.login-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2.5rem;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+}
+.login-box svg { width: 48px; height: 48px; fill: var(--blue); margin-bottom: 1rem; }
+.login-box h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--text); }
+.login-box .sub { color: var(--lavender); font-size: 0.9rem; margin-bottom: 1.75rem; }
+.login-box input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+  margin-bottom: 1rem;
+  background: var(--bg-input);
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+.login-box input:focus { border-color: var(--purple); }
+.login-box input::placeholder { color: var(--text-dim); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: var(--purple); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--purple-light); }
+.btn-action { background: var(--coral); color: #fff; }
+.btn-action:hover:not(:disabled) { background: var(--coral-light); }
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 2px solid var(--border);
+}
+.btn-ghost:hover:not(:disabled) { border-color: var(--purple); color: var(--purple-light); }
+.btn-full { width: 100%; }
+
+/* ── Form ── */
+label {
+  display: block; font-weight: 600; margin-bottom: 0.4rem;
+  font-size: 0.8rem; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.url-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+  background: var(--bg-input);
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+.url-input:focus { border-color: var(--purple); }
+.url-input::placeholder { color: var(--text-dim); }
+
+.form-row { display: flex; gap: 1rem; align-items: end; }
+.form-group { margin-bottom: 1.25rem; }
+
+select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  background: var(--bg-input);
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+}
+select:focus { border-color: var(--purple); }
+
+/* ── Advanced ── */
+.advanced-toggle {
+  background: none; border: none;
+  color: var(--purple-light);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  display: flex; align-items: center; gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+.advanced-toggle .arrow { transition: transform 0.2s; font-size: 0.65rem; }
+.advanced-toggle.open .arrow { transform: rotate(90deg); }
+.advanced-panel { display: none; margin-bottom: 1rem; padding: 1rem; background: var(--bg-raised); border-radius: 8px; }
+.advanced-panel.open { display: block; }
+
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; }
+.checkbox-label {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-weight: 400; font-size: 0.9rem; cursor: pointer; color: var(--text);
+}
+.checkbox-label input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: var(--purple);
+  cursor: pointer;
+}
+
+.error-msg {
+  color: var(--coral);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: 0.75rem;
+}
+
+.actions { display: flex; gap: 0.75rem; }
+
+/* ── Progress ── */
+.progress-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.progress-section h3 {
+  font-size: 0.95rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--purple-light);
+}
+.spinner {
+  width: 16px; height: 16px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--purple-light);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.progress-track {
+  background: var(--bg-raised);
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--coral));
+  border-radius: 6px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+.progress-meta {
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+  font-size: 0.85rem; color: var(--text-muted);
+}
+.progress-meta strong { color: var(--text); font-weight: 600; }
+.progress-url {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: monospace;
+}
+
+/* ── Summary cards ── */
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.stat-card {
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid;
+  background: var(--bg-surface);
+  border-color: var(--border);
+}
+.stat-card .num {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.stat-card .lbl { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem; }
+.stat-card.errors { border-left-color: var(--coral); }
+.stat-card.errors .num { color: var(--coral); }
+.stat-card.warnings { border-left-color: var(--amber); }
+.stat-card.warnings .num { color: var(--amber); }
+.stat-card.info { border-left-color: var(--sky); }
+.stat-card.info .num { color: var(--sky); }
+.stat-card.pages { border-left-color: var(--purple-light); }
+.stat-card.pages .num { color: var(--purple-light); }
+
+/* ── Results header ── */
+.results-header {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.results-header h2 { font-size: 1.1rem; font-weight: 700; }
+
+/* ── Filters ── */
+.filters {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  margin-bottom: 1rem; align-items: center;
+}
+.pill {
+  padding: 0.35rem 0.85rem;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text-muted);
+}
+.pill:hover { border-color: var(--purple); color: var(--purple-light); }
+.pill.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+.pill.active-error { background: var(--coral); color: #fff; border-color: var(--coral); }
+.pill.active-warning { background: var(--amber); color: #1a1a10; border-color: var(--amber); }
+.pill.active-info { background: var(--sky); color: #0e0e24; border-color: var(--sky); }
+
+.search-box {
+  padding: 0.35rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  outline: none;
+  flex: 1;
+  min-width: 140px;
+  background: var(--bg-input);
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+.search-box:focus { border-color: var(--purple); }
+.search-box::placeholder { color: var(--text-dim); }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.badge-error { background: rgba(255,107,107,0.15); color: var(--coral-light); }
+.badge-warning { background: rgba(255,213,79,0.12); color: var(--amber); }
+.badge-info { background: rgba(100,181,246,0.12); color: var(--sky); }
+
+/* ── Page Cards ── */
+.page-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.page-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+
+.page-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg-raised);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.page-card-header:hover {
+  background: rgba(123,104,238,0.1);
+}
+
+.page-card-header .chevron {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.page-card.open .page-card-header .chevron {
+  transform: rotate(90deg);
+}
+
+.page-card-url {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--purple-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.severity-counts {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.count-badge.error-count {
+  background: rgba(255,107,107,0.15);
+  color: var(--coral-light);
+}
+.count-badge.warning-count {
+  background: rgba(255,213,79,0.12);
+  color: var(--amber);
+}
+.count-badge.info-count {
+  background: rgba(100,181,246,0.12);
+  color: var(--sky);
+}
+
+.page-card-body {
+  display: none;
+  border-top: 1px solid var(--border);
+}
+.page-card.open .page-card-body {
+  display: block;
+}
+
+/* ── Issue Rows ── */
+.issue-row {
+  border-bottom: 1px solid var(--border);
+}
+.issue-row:last-child {
+  border-bottom: none;
+}
+
+.issue-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 0.85rem;
+}
+.issue-summary:hover {
+  background: rgba(123,104,238,0.06);
+}
+
+.issue-summary .badge {
+  flex-shrink: 0;
+}
+
+.issue-type {
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 100px;
+}
+
+.issue-message {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.issue-expand-icon {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+.issue-row.open .issue-expand-icon {
+  transform: rotate(45deg);
+}
+
+/* ── Issue Detail ── */
+.issue-detail {
+  display: none;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border);
+}
+.issue-row.open .issue-detail {
+  display: block;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1rem;
+  font-size: 0.8rem;
+}
+
+.detail-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.detail-value {
+  color: var(--text);
+  word-break: break-all;
+}
+
+.detail-value a {
+  color: var(--purple-light);
+  text-decoration: none;
+}
+.detail-value a:hover {
+  text-decoration: underline;
+}
+
+/* ── Pagination ── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.pagination-info {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-right: 0.5rem;
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.page-btn:hover:not(:disabled) {
+  border-color: var(--purple);
+  color: var(--purple-light);
+}
+.page-btn.active {
+  background: var(--purple);
+  color: #fff;
+  border-color: var(--purple);
+}
+.page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.no-issues {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--mint);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.hidden { display: none !important; }
+
+/* ── Crawl Summary ── */
+.summary-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.summary-toggle:hover { background: rgba(123,104,238,0.06); }
+.summary-toggle-left { display: flex; align-items: center; gap: 0.5rem; }
+.summary-toggle-title { font-size: 1rem; font-weight: 700; color: var(--purple-light); }
+.summary-toggle .arrow {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+.summary-toggle .arrow.open { transform: rotate(90deg); }
+.health-score-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--text-muted);
+  color: var(--bg-body);
+  min-width: 32px;
+  text-align: center;
+}
+.summary-body {
+  display: none;
+  padding: 0 1.5rem 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.summary-body.open { display: block; }
+
+.health-section {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.5rem 0 1rem;
+}
+.health-ring-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+.health-ring { width: 120px; height: 120px; transform: rotate(-90deg); }
+.health-ring-bg { fill: none; stroke: var(--bg-raised); stroke-width: 8; }
+.health-ring-fill {
+  fill: none;
+  stroke: var(--mint);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease-out;
+}
+.health-ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.health-ring-number { font-size: 2rem; font-weight: 700; line-height: 1; color: var(--mint); }
+.health-ring-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-top: 0.15rem; }
+.health-details { font-size: 0.9rem; color: var(--text); display: flex; flex-direction: column; gap: 0.35rem; }
+.health-detail-row { display: flex; align-items: center; gap: 0.5rem; }
+.detail-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.summary-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--purple-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.top-issues-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.top-issue-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--bg-raised);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.top-issue-label {
+  flex: 1; min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text); font-weight: 500;
+}
+.top-issue-count { font-weight: 700; color: var(--text); flex-shrink: 0; }
+.top-issue-pages { color: var(--text-muted); font-size: 0.75rem; flex-shrink: 0; min-width: 55px; text-align: right; }
+
+.analyzer-bars { display: flex; flex-direction: column; gap: 0.5rem; }
+.analyzer-bar-row { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+.analyzer-bar-label { min-width: 110px; color: var(--text-muted); font-weight: 600; flex-shrink: 0; }
+.analyzer-bar-track { flex: 1; height: 8px; background: var(--bg-raised); border-radius: 4px; overflow: hidden; }
+.analyzer-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out; }
+.analyzer-bar-count { min-width: 28px; text-align: right; font-weight: 700; color: var(--text); flex-shrink: 0; }
+.analyzer-bar-severity { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .topbar { padding: 0.75rem 1rem; }
+  .main { padding: 1.25rem 1rem; }
+  .panel { padding: 1.5rem; }
+  .form-row { flex-direction: column; gap: 0; }
+  .summary-row { grid-template-columns: repeat(2, 1fr); }
+  .actions { flex-direction: column; }
+  .page-card-header { flex-wrap: wrap; gap: 0.5rem; }
+  .severity-counts { margin-left: 1.25rem; }
+  .issue-summary { flex-wrap: wrap; gap: 0.4rem; }
+  .issue-type { min-width: auto; }
+  .issue-message { width: 100%; order: 3; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .issue-detail { padding-left: 1rem; }
+  .pagination { gap: 0.35rem; }
+  .pagination-info { width: 100%; text-align: center; margin-right: 0; }
+  .health-section { flex-direction: column; gap: 1rem; align-items: flex-start; }
+  .health-ring-container { width: 100px; height: 100px; align-self: center; }
+  .health-ring { width: 100px; height: 100px; }
+  .analyzer-bar-label { min-width: 80px; font-size: 0.8rem; }
+  .top-issue-row { flex-wrap: wrap; gap: 0.4rem; }
+  .top-issue-pages { width: 100%; text-align: left; margin-left: 3.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-overlay" class="login-overlay">
+  <div class="login-box">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    <h1>Site Crawler</h1>
+    <p class="sub">Third Sun Productions</p>
+    <form id="login-form">
+      <input type="password" id="login-password" placeholder="Team password" required autofocus>
+      <button type="submit" class="btn btn-primary btn-full" id="login-btn">Sign In</button>
+    </form>
+    <div id="login-error" class="error-msg" hidden></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+    <h1>Site Crawler</h1>
+    <span class="tag">Third Sun</span>
+  </div>
+
+  <div class="main">
+
+    <!-- Config panel -->
+    <div class="panel" id="config-panel">
+      <div class="panel-header">New Crawl</div>
+      <form id="crawl-form">
+        <div class="form-group">
+          <label for="url-input">Website URL</label>
+          <input type="text" id="url-input" class="url-input" placeholder="https://example.com" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="max-width:200px">
+            <label for="max-pages">Max Pages</label>
+            <select id="max-pages">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+              <option value="500">500</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="button" class="advanced-toggle" id="advanced-toggle">
+          <span class="arrow">&#9654;</span> Advanced Options
+        </button>
+        <div class="advanced-panel" id="advanced-panel">
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="opt-grammar"> Enable grammar checking
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="opt-dynamic"> Enable dynamic testing
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="opt-skip-external" checked> Skip external links
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="opt-skip-forms"> Skip form analysis
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="opt-skip-joomla"> Skip Joomla checks
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="opt-skip-performance"> Skip performance checks
+            </label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" id="crawl-btn">Start Crawl</button>
+          <button type="button" class="btn btn-ghost hidden" id="cancel-btn">Cancel</button>
+        </div>
+        <div id="crawl-error" class="error-msg" hidden></div>
+      </form>
+
+      <!-- Progress -->
+      <div id="progress-section" class="progress-section hidden">
+        <h3><span class="spinner"></span> Crawling... <span id="elapsed" style="font-weight:400;color:var(--text-muted);font-size:0.85rem;margin-left:0.5rem;">0:00</span></h3>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-bar"></div>
+        </div>
+        <div class="progress-meta">
+          <span>Pages: <strong id="stat-pages">0</strong></span>
+          <span>Issues: <strong id="stat-issues">0</strong></span>
+        </div>
+        <div class="progress-url" id="progress-url"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results-section" class="hidden">
+      <div class="summary-row">
+        <div class="stat-card errors">
+          <div class="num" id="count-errors">0</div>
+          <div class="lbl">Errors</div>
+        </div>
+        <div class="stat-card warnings">
+          <div class="num" id="count-warnings">0</div>
+          <div class="lbl">Warnings</div>
+        </div>
+        <div class="stat-card info">
+          <div class="num" id="count-info">0</div>
+          <div class="lbl">Info</div>
+        </div>
+        <div class="stat-card pages">
+          <div class="num" id="count-pages">0</div>
+          <div class="lbl">Pages</div>
+        </div>
+      </div>
+
+      <!-- Crawl Summary -->
+      <div id="crawl-summary" class="panel hidden" style="padding:0;">
+        <div class="summary-toggle" id="summary-toggle">
+          <span class="summary-toggle-left">
+            <span class="arrow" id="summary-arrow">&#9654;</span>
+            <span class="summary-toggle-title">Crawl Summary</span>
+          </span>
+          <span class="summary-toggle-right">
+            <span class="health-score-badge" id="health-score-badge">--</span>
+          </span>
+        </div>
+        <div class="summary-body" id="summary-body">
+          <div class="health-section">
+            <div class="health-ring-container">
+              <svg class="health-ring" viewBox="0 0 120 120">
+                <circle class="health-ring-bg" cx="60" cy="60" r="52" />
+                <circle class="health-ring-fill" id="health-ring-fill" cx="60" cy="60" r="52" />
+              </svg>
+              <div class="health-ring-text">
+                <span class="health-ring-number" id="health-score-number">--</span>
+                <span class="health-ring-label" id="health-score-label">Score</span>
+              </div>
+            </div>
+            <div class="health-details">
+              <div class="health-detail-row">
+                <span class="detail-dot" style="background:var(--coral)"></span>
+                <span id="health-error-count">0</span> errors
+              </div>
+              <div class="health-detail-row">
+                <span class="detail-dot" style="background:var(--amber)"></span>
+                <span id="health-warning-count">0</span> warnings
+              </div>
+              <div class="health-detail-row">
+                <span class="detail-dot" style="background:var(--sky)"></span>
+                <span id="health-info-count">0</span> info items
+              </div>
+              <div class="health-detail-row" style="margin-top:0.5rem;color:var(--text-muted);font-size:0.8rem;">
+                <span id="health-density">0</span> issues per page average
+              </div>
+            </div>
+          </div>
+          <div class="top-issues-section">
+            <h3 class="summary-section-title">Top Issues</h3>
+            <div class="top-issues-list" id="top-issues-list"></div>
+          </div>
+          <div class="analyzer-breakdown-section">
+            <h3 class="summary-section-title">By Category</h3>
+            <div class="analyzer-bars" id="analyzer-bars"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="results-header">
+          <h2>Issues</h2>
+          <div style="display:flex;gap:0.5rem;">
+            <button class="btn btn-action" id="csv-btn" style="font-size:0.85rem;padding:0.5rem 1rem;">Download CSV</button>
+            <button class="btn btn-ghost" id="new-crawl-btn" style="font-size:0.85rem;padding:0.5rem 1rem;">New Crawl</button>
+          </div>
+        </div>
+
+        <div id="no-issues" class="no-issues hidden">No issues found! This site looks great.</div>
+
+        <div id="issues-container">
+          <div class="filters">
+            <button class="pill active" data-filter="all">All</button>
+            <button class="pill" data-filter="error">Errors</button>
+            <button class="pill" data-filter="warning">Warnings</button>
+            <button class="pill" data-filter="info">Info</button>
+            <input type="text" class="search-box" id="search-input" placeholder="Search issues...">
+          </div>
+
+          <div class="page-cards-container" id="page-cards"></div>
+          <div class="pagination hidden" id="pagination"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  const loginOverlay = document.getElementById("login-overlay");
+  const loginForm = document.getElementById("login-form");
+  const loginPassword = document.getElementById("login-password");
+  const loginBtn = document.getElementById("login-btn");
+  const loginError = document.getElementById("login-error");
+  const app = document.getElementById("app");
+  const crawlForm = document.getElementById("crawl-form");
+  const urlInput = document.getElementById("url-input");
+  const maxPagesSelect = document.getElementById("max-pages");
+  const crawlBtn = document.getElementById("crawl-btn");
+  const cancelBtn = document.getElementById("cancel-btn");
+  const crawlError = document.getElementById("crawl-error");
+  const advancedToggle = document.getElementById("advanced-toggle");
+  const advancedPanel = document.getElementById("advanced-panel");
+  const progressSection = document.getElementById("progress-section");
+  const progressBar = document.getElementById("progress-bar");
+  const statPages = document.getElementById("stat-pages");
+  const statIssues = document.getElementById("stat-issues");
+  const progressUrl = document.getElementById("progress-url");
+  const resultsSection = document.getElementById("results-section");
+  const csvBtn = document.getElementById("csv-btn");
+  const newCrawlBtn = document.getElementById("new-crawl-btn");
+  const countErrors = document.getElementById("count-errors");
+  const countWarnings = document.getElementById("count-warnings");
+  const countInfo = document.getElementById("count-info");
+  const countPages = document.getElementById("count-pages");
+  const noIssues = document.getElementById("no-issues");
+  const issuesContainer = document.getElementById("issues-container");
+  const pageCardsEl = document.getElementById("page-cards");
+  const paginationEl = document.getElementById("pagination");
+  const searchInput = document.getElementById("search-input");
+  const crawlSummary = document.getElementById("crawl-summary");
+  const summaryToggle = document.getElementById("summary-toggle");
+  const summaryArrow = document.getElementById("summary-arrow");
+  const summaryBody = document.getElementById("summary-body");
+  const healthScoreBadge = document.getElementById("health-score-badge");
+  const healthRingFill = document.getElementById("health-ring-fill");
+  const healthScoreNumber = document.getElementById("health-score-number");
+  const healthScoreLabel = document.getElementById("health-score-label");
+  const healthErrorCount = document.getElementById("health-error-count");
+  const healthWarningCount = document.getElementById("health-warning-count");
+  const healthInfoCount = document.getElementById("health-info-count");
+  const healthDensity = document.getElementById("health-density");
+  const topIssuesList = document.getElementById("top-issues-list");
+  const analyzerBars = document.getElementById("analyzer-bars");
+
+  let currentCrawlId = null;
+  let allIssues = [];
+  let currentFilter = "all";
+  let currentSearch = "";
+  let currentPage = 1;
+  let expandedPageCards = new Set();
+  let expandedIssueRows = new Set();
+  let summaryExpanded = true;
+  let abortController = null;
+  let elapsedInterval = null;
+  const PAGES_PER_VIEW = 20;
+  const elapsedEl = document.getElementById("elapsed");
+
+  function startTimer() {
+    const start = Date.now();
+    elapsedEl.textContent = "0:00";
+    elapsedInterval = setInterval(() => {
+      const s = Math.floor((Date.now() - start) / 1000);
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      elapsedEl.textContent = m + ":" + String(sec).padStart(2, "0");
+    }, 1000);
+  }
+  function stopTimer() {
+    if (elapsedInterval) { clearInterval(elapsedInterval); elapsedInterval = null; }
+  }
+
+  const SEVERITY_ORDER = { error: 0, warning: 1, info: 2 };
+
+  const ISSUE_CATEGORIES = {
+    broken_link: "links", timeout: "links", connection_error: "links",
+    empty_href: "links", javascript_void: "links", anchor_only: "links",
+    form_missing_action: "forms", form_no_submit: "forms",
+    form_missing_labels: "forms", form_required_no_validation: "forms",
+    form_mailto_action: "forms", form_submit_error: "forms",
+    button_no_type: "buttons", button_no_accessible_name: "buttons",
+    button_outside_form: "buttons", button_no_effect: "buttons",
+    button_js_error: "buttons",
+    grammar_error: "grammar", spelling_error: "grammar",
+    image_missing_alt: "accessibility",
+    a11y_missing_lang: "accessibility", a11y_missing_landmarks: "accessibility",
+    a11y_missing_skip_nav: "accessibility", a11y_empty_link: "accessibility",
+    a11y_heading_hierarchy: "accessibility",
+    console_error: "dynamic",
+    stripe_test_mode: "payment", donation_form_test_mode: "payment",
+    joomla_error_page: "joomla", joomla_admin_exposed: "joomla",
+    joomla_version_leak: "joomla", joomla_missing_component_assets: "joomla",
+    joomla_empty_event_list: "joomla", joomla_broken_registration: "joomla",
+    joomla_empty_calendar: "joomla", joomla_calendar_js_missing: "joomla",
+    joomla_form_render_failure: "joomla", joomla_seo_misconfigured: "joomla",
+    joomla_popup_assets_missing: "joomla", joomla_empty_gallery: "joomla",
+    joomla_pagebuilder_assets_missing: "joomla", joomla_empty_section: "joomla",
+    joomla_editor_link_exposed: "joomla",
+    perf_render_blocking_script: "performance", perf_image_missing_dimensions: "performance",
+    perf_image_no_lazy_loading: "performance", perf_excessive_resources: "performance",
+    perf_missing_viewport: "performance", perf_inline_style_block: "performance",
+    perf_unminified_assets: "performance",
+  };
+  const CATEGORY_LABELS = {
+    links: "Links", forms: "Forms", buttons: "Buttons",
+    grammar: "Grammar & Spelling", accessibility: "Accessibility",
+    joomla: "Joomla", performance: "Performance",
+    payment: "Payment", dynamic: "Dynamic Testing",
+  };
+  const CATEGORY_COLORS = {
+    links: "var(--coral)", forms: "var(--amber)", buttons: "var(--peach)",
+    grammar: "var(--sky)", accessibility: "var(--lavender)",
+    joomla: "var(--purple-light)", performance: "var(--mint)",
+    payment: "var(--coral-light)", dynamic: "var(--peach)",
+  };
+
+  function showApp() {
+    loginOverlay.classList.add("hidden");
+    app.classList.remove("hidden");
+  }
+  function showLogin() {
+    loginOverlay.classList.remove("hidden");
+    app.classList.add("hidden");
+    loginPassword.value = "";
+    loginPassword.focus();
+  }
+
+  (async () => {
+    try {
+      const res = await fetch("/auth-check");
+      const data = await res.json();
+      if (data.authenticated) showApp();
+    } catch (_) {}
+  })();
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    loginBtn.disabled = true;
+    loginError.hidden = true;
+    try {
+      const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: loginPassword.value }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Login failed");
+      }
+      showApp();
+    } catch (err) {
+      loginError.textContent = err.message;
+      loginError.hidden = false;
+      loginPassword.focus();
+    } finally {
+      loginBtn.disabled = false;
+    }
+  });
+
+  function handle401(res) {
+    if (res.status === 401) { showLogin(); return true; }
+    return false;
+  }
+
+  advancedToggle.addEventListener("click", () => {
+    advancedToggle.classList.toggle("open");
+    advancedPanel.classList.toggle("open");
+  });
+
+  crawlForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    crawlError.hidden = true;
+
+    const url = urlInput.value.trim();
+    if (!url) return;
+
+    const body = {
+      url,
+      max_pages: parseInt(maxPagesSelect.value),
+      skip_grammar: !document.getElementById("opt-grammar").checked,
+      skip_external: document.getElementById("opt-skip-external").checked,
+      skip_forms: document.getElementById("opt-skip-forms").checked,
+      skip_joomla: document.getElementById("opt-skip-joomla").checked,
+      skip_performance: document.getElementById("opt-skip-performance").checked,
+      skip_dynamic: !document.getElementById("opt-dynamic").checked,
+    };
+
+    crawlBtn.disabled = true;
+    cancelBtn.classList.remove("hidden");
+    resultsSection.classList.add("hidden");
+    progressSection.classList.remove("hidden");
+    startTimer();
+    progressBar.style.width = "0%";
+    statPages.textContent = "0";
+    statIssues.textContent = "0";
+    progressUrl.textContent = "";
+    allIssues = [];
+
+    try {
+      const res = await fetch("/crawl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (handle401(res)) return;
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to start crawl");
+      }
+      const { crawl_id } = await res.json();
+      currentCrawlId = crawl_id;
+
+      abortController = new AbortController();
+      const streamRes = await fetch(`/crawl/${crawl_id}/stream`, {
+        signal: abortController.signal,
+      });
+      if (handle401(streamRes)) return;
+
+      const reader = streamRes.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      const maxPages = parseInt(maxPagesSelect.value);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          let msg;
+          try { msg = JSON.parse(line.slice(6)); } catch (_) { continue; }
+
+          if (msg.type === "progress") {
+            const pct = Math.min((msg.pages / maxPages) * 100, 100);
+            progressBar.style.width = pct + "%";
+            statPages.textContent = msg.pages;
+            statIssues.textContent = msg.issues;
+            progressUrl.textContent = msg.url;
+          } else if (msg.type === "complete") {
+            allIssues = msg.issues || [];
+            showResults(msg.pages_crawled, msg.links_checked, allIssues);
+          } else if (msg.type === "error") {
+            throw new Error(msg.message);
+          }
+        }
+      }
+    } catch (err) {
+      if (err.name === "AbortError") {
+        stopTimer();
+        progressSection.classList.add("hidden");
+      } else {
+        crawlError.textContent = err.message;
+        crawlError.hidden = false;
+        stopTimer();
+        progressSection.classList.add("hidden");
+      }
+    } finally {
+      crawlBtn.disabled = false;
+      cancelBtn.classList.add("hidden");
+      abortController = null;
+    }
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    if (abortController) abortController.abort();
+  });
+
+  /* ── Results ── */
+
+  function showResults(pagesCrawled, linksChecked, issues) {
+    stopTimer();
+    progressSection.classList.add("hidden");
+    resultsSection.classList.remove("hidden");
+
+    const errors = issues.filter(i => i.severity === "error").length;
+    const warnings = issues.filter(i => i.severity === "warning").length;
+    const info = issues.filter(i => i.severity === "info").length;
+
+    countErrors.textContent = errors;
+    countWarnings.textContent = warnings;
+    countInfo.textContent = info;
+    countPages.textContent = pagesCrawled;
+    renderSummary(pagesCrawled, issues);
+
+    if (issues.length === 0) {
+      noIssues.classList.remove("hidden");
+      issuesContainer.classList.add("hidden");
+    } else {
+      noIssues.classList.add("hidden");
+      issuesContainer.classList.remove("hidden");
+      currentFilter = "all";
+      currentSearch = "";
+      currentPage = 1;
+      expandedPageCards = new Set();
+      expandedIssueRows = new Set();
+      searchInput.value = "";
+      document.querySelectorAll(".pill").forEach(b => b.classList.remove("active", "active-error", "active-warning", "active-info"));
+      document.querySelector('[data-filter="all"]').classList.add("active");
+      renderPages();
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  /* ── Crawl Summary ── */
+
+  function calculateHealthScore(issues, pagesCrawled) {
+    if (issues.length === 0) return 100;
+    const WEIGHTS = { error: 10, warning: 3, info: 0.5 };
+    const CAP = 25;
+    const catPenalties = {};
+    for (const issue of issues) {
+      const cat = ISSUE_CATEGORIES[issue.issue_type] || "other";
+      if (!catPenalties[cat]) catPenalties[cat] = 0;
+      catPenalties[cat] += WEIGHTS[issue.severity] || 0;
+    }
+    let total = 0;
+    for (const cat in catPenalties) {
+      total += Math.min(catPenalties[cat], CAP);
+    }
+    const adjusted = total / Math.sqrt(Math.max(pagesCrawled, 1));
+    return Math.max(0, Math.min(100, Math.round(100 - adjusted)));
+  }
+
+  function getScoreLabel(score) {
+    if (score >= 90) return { text: "Excellent", color: "var(--mint)" };
+    if (score >= 70) return { text: "Good", color: "var(--sky)" };
+    if (score >= 50) return { text: "Needs Work", color: "var(--amber)" };
+    return { text: "Concerning", color: "var(--coral)" };
+  }
+
+  function renderSummary(pagesCrawled, issues) {
+    if (issues.length === 0) {
+      crawlSummary.classList.add("hidden");
+      return;
+    }
+    crawlSummary.classList.remove("hidden");
+    summaryExpanded = true;
+    summaryBody.classList.add("open");
+    summaryArrow.classList.add("open");
+
+    const score = calculateHealthScore(issues, pagesCrawled);
+    const label = getScoreLabel(score);
+
+    healthScoreNumber.textContent = score;
+    healthScoreNumber.style.color = label.color;
+    healthScoreLabel.textContent = label.text;
+    healthScoreLabel.style.color = label.color;
+    healthScoreBadge.textContent = score;
+    healthScoreBadge.style.background = label.color;
+    healthScoreBadge.style.color = score >= 50 ? "#0e0e24" : "#fff";
+
+    const circumference = 2 * Math.PI * 52;
+    const offset = circumference - (score / 100) * circumference;
+    healthRingFill.style.strokeDasharray = circumference;
+    healthRingFill.style.strokeDashoffset = circumference;
+    healthRingFill.style.stroke = label.color;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        healthRingFill.style.strokeDashoffset = offset;
+      });
+    });
+
+    const errors = issues.filter(i => i.severity === "error").length;
+    const warnings = issues.filter(i => i.severity === "warning").length;
+    const info = issues.filter(i => i.severity === "info").length;
+    healthErrorCount.textContent = errors;
+    healthWarningCount.textContent = warnings;
+    healthInfoCount.textContent = info;
+    healthDensity.textContent = (issues.length / Math.max(pagesCrawled, 1)).toFixed(1);
+
+    renderTopIssues(issues);
+    renderAnalyzerBreakdown(issues);
+  }
+
+  function renderTopIssues(issues) {
+    const typeMap = {};
+    for (const issue of issues) {
+      const key = issue.issue_type;
+      if (!typeMap[key]) {
+        typeMap[key] = {
+          label: issue.issue_type_label || key,
+          severity: issue.severity,
+          count: 0,
+          pages: new Set(),
+        };
+      }
+      typeMap[key].count++;
+      typeMap[key].pages.add(issue.page_url);
+    }
+    const sorted = Object.values(typeMap).sort((a, b) => {
+      const sd = (SEVERITY_ORDER[a.severity] ?? 9) - (SEVERITY_ORDER[b.severity] ?? 9);
+      return sd !== 0 ? sd : b.count - a.count;
+    });
+    let html = "";
+    for (const item of sorted.slice(0, 8)) {
+      const bc = item.severity === "error" ? "badge-error"
+               : item.severity === "warning" ? "badge-warning"
+               : "badge-info";
+      const pc = item.pages.size;
+      html += '<div class="top-issue-row">'
+            + '<span class="badge ' + bc + '">' + escapeHtml(item.severity) + '</span>'
+            + '<span class="top-issue-label">' + escapeHtml(item.label) + '</span>'
+            + '<span class="top-issue-count">' + item.count + 'x</span>'
+            + '<span class="top-issue-pages">' + pc + ' page' + (pc !== 1 ? 's' : '') + '</span>'
+            + '</div>';
+    }
+    topIssuesList.innerHTML = html;
+  }
+
+  function renderAnalyzerBreakdown(issues) {
+    const catMap = {};
+    for (const issue of issues) {
+      const cat = ISSUE_CATEGORIES[issue.issue_type] || "other";
+      if (!catMap[cat]) catMap[cat] = { errors: 0, warnings: 0, info: 0, total: 0 };
+      catMap[cat].total++;
+      if (issue.severity === "error") catMap[cat].errors++;
+      else if (issue.severity === "warning") catMap[cat].warnings++;
+      else catMap[cat].info++;
+    }
+    const sorted = Object.entries(catMap).sort((a, b) => b[1].total - a[1].total);
+    const maxTotal = sorted.length > 0 ? sorted[0][1].total : 1;
+    let html = "";
+    for (const [cat, counts] of sorted) {
+      const label = CATEGORY_LABELS[cat] || cat;
+      const color = CATEGORY_COLORS[cat] || "var(--text-muted)";
+      const barWidth = Math.max((counts.total / maxTotal) * 100, 4);
+      let sevDot = "var(--sky)";
+      if (counts.errors > 0) sevDot = "var(--coral)";
+      else if (counts.warnings > 0) sevDot = "var(--amber)";
+      html += '<div class="analyzer-bar-row">'
+            + '<span class="analyzer-bar-label">' + escapeHtml(label) + '</span>'
+            + '<div class="analyzer-bar-track">'
+            + '<div class="analyzer-bar-fill" style="width:' + barWidth + '%;background:' + color + '"></div>'
+            + '</div>'
+            + '<span class="analyzer-bar-count">' + counts.total + '</span>'
+            + '<span class="analyzer-bar-severity" style="background:' + sevDot + '"></span>'
+            + '</div>';
+    }
+    analyzerBars.innerHTML = html;
+  }
+
+  summaryToggle.addEventListener("click", () => {
+    summaryExpanded = !summaryExpanded;
+    summaryBody.classList.toggle("open", summaryExpanded);
+    summaryArrow.classList.toggle("open", summaryExpanded);
+  });
+
+  function groupByPage(issues) {
+    const map = new Map();
+    for (const issue of issues) {
+      const url = issue.page_url || "(unknown)";
+      if (!map.has(url)) map.set(url, []);
+      map.get(url).push(issue);
+    }
+    for (const [, pageIssues] of map) {
+      pageIssues.sort((a, b) => (SEVERITY_ORDER[a.severity] ?? 9) - (SEVERITY_ORDER[b.severity] ?? 9));
+    }
+    const pages = [];
+    for (const [url, pageIssues] of map) {
+      const errors = pageIssues.filter(i => i.severity === "error").length;
+      const warnings = pageIssues.filter(i => i.severity === "warning").length;
+      const infoCount = pageIssues.filter(i => i.severity === "info").length;
+      pages.push({ url, issues: pageIssues, errors, warnings, info: infoCount });
+    }
+    pages.sort((a, b) => {
+      if (a.errors !== b.errors) return b.errors - a.errors;
+      if (a.warnings !== b.warnings) return b.warnings - a.warnings;
+      return b.info - a.info;
+    });
+    return pages;
+  }
+
+  function getFilteredPages() {
+    let filtered = allIssues;
+    if (currentFilter !== "all") {
+      filtered = filtered.filter(i => i.severity === currentFilter);
+    }
+    if (currentSearch) {
+      const q = currentSearch.toLowerCase();
+      filtered = filtered.filter(i =>
+        (i.message || "").toLowerCase().includes(q) ||
+        (i.issue_type_label || "").toLowerCase().includes(q) ||
+        (i.page_url || "").toLowerCase().includes(q) ||
+        (i.element_text || "").toLowerCase().includes(q) ||
+        (i.suggestion || "").toLowerCase().includes(q)
+      );
+    }
+    return groupByPage(filtered);
+  }
+
+  function renderPages() {
+    const pages = getFilteredPages();
+    const totalPageCount = pages.length;
+
+    if (totalPageCount === 0) {
+      pageCardsEl.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-dim);">No matching issues</div>';
+      paginationEl.classList.add("hidden");
+      return;
+    }
+
+    const totalPaginationPages = Math.ceil(totalPageCount / PAGES_PER_VIEW);
+    if (currentPage > totalPaginationPages) currentPage = totalPaginationPages;
+    const startIdx = (currentPage - 1) * PAGES_PER_VIEW;
+    const endIdx = Math.min(startIdx + PAGES_PER_VIEW, totalPageCount);
+    const visiblePages = pages.slice(startIdx, endIdx);
+
+    let html = "";
+    for (const pg of visiblePages) {
+      const isOpen = expandedPageCards.has(pg.url);
+      let pageDisplay = pg.url;
+      try { pageDisplay = new URL(pg.url).pathname; } catch (_) {}
+
+      html += '<div class="page-card' + (isOpen ? " open" : "") + '" data-page-url="' + escapeHtml(pg.url) + '">';
+      html += '<div class="page-card-header">';
+      html += '<span class="chevron">&#9654;</span>';
+      html += '<span class="page-card-url" title="' + escapeHtml(pg.url) + '">' + escapeHtml(pageDisplay || "/") + "</span>";
+      html += '<div class="severity-counts">';
+      if (pg.errors > 0) html += '<span class="count-badge error-count">' + pg.errors + " error" + (pg.errors !== 1 ? "s" : "") + "</span>";
+      if (pg.warnings > 0) html += '<span class="count-badge warning-count">' + pg.warnings + " warning" + (pg.warnings !== 1 ? "s" : "") + "</span>";
+      if (pg.info > 0) html += '<span class="count-badge info-count">' + pg.info + " info</span>";
+      html += "</div>";
+      html += "</div>";
+
+      html += '<div class="page-card-body">';
+      for (const issue of pg.issues) {
+        const isIssueOpen = expandedIssueRows.has(issue.id);
+        const bc = issue.severity === "error" ? "badge-error" : issue.severity === "warning" ? "badge-warning" : "badge-info";
+
+        html += '<div class="issue-row' + (isIssueOpen ? " open" : "") + '" data-issue-id="' + escapeHtml(issue.id) + '">';
+        html += '<div class="issue-summary">';
+        html += '<span class="badge ' + bc + '">' + escapeHtml(issue.severity_label) + "</span>";
+        html += '<span class="issue-type">' + escapeHtml(issue.issue_type_label) + "</span>";
+        html += '<span class="issue-message">' + escapeHtml(issue.message) + "</span>";
+        html += '<span class="issue-expand-icon">+</span>';
+        html += "</div>";
+
+        html += '<div class="issue-detail"><div class="detail-grid">';
+        if (issue.element_text) {
+          html += '<span class="detail-label">Element</span><span class="detail-value">' + escapeHtml(issue.element_text) + "</span>";
+        }
+        if (issue.target_url) {
+          html += '<span class="detail-label">Target URL</span><span class="detail-value"><a href="' + escapeHtml(issue.target_url) + '" target="_blank">' + escapeHtml(issue.target_url) + "</a></span>";
+        }
+        if (issue.http_status) {
+          html += '<span class="detail-label">HTTP Status</span><span class="detail-value">' + issue.http_status + "</span>";
+        }
+        if (issue.suggestion) {
+          html += '<span class="detail-label">Suggestion</span><span class="detail-value">' + escapeHtml(issue.suggestion) + "</span>";
+        }
+        if (issue.context) {
+          html += '<span class="detail-label">Context</span><span class="detail-value">' + escapeHtml(issue.context) + "</span>";
+        }
+        html += "</div></div>";
+        html += "</div>";
+      }
+      html += "</div>";
+      html += "</div>";
+    }
+
+    pageCardsEl.innerHTML = html;
+
+    if (totalPaginationPages <= 1) {
+      paginationEl.classList.add("hidden");
+    } else {
+      paginationEl.classList.remove("hidden");
+      let ph = '<span class="pagination-info">Showing ' + (startIdx + 1) + "\u2013" + endIdx + " of " + totalPageCount + " pages</span>";
+      ph += '<button class="page-btn" data-page="' + (currentPage - 1) + '"' + (currentPage === 1 ? " disabled" : "") + ">Prev</button>";
+
+      const maxBtns = 7;
+      let sp = 1, ep = totalPaginationPages;
+      if (totalPaginationPages > maxBtns) {
+        sp = Math.max(1, currentPage - 3);
+        ep = Math.min(totalPaginationPages, sp + maxBtns - 1);
+        if (ep - sp < maxBtns - 1) sp = ep - maxBtns + 1;
+      }
+      if (sp > 1) {
+        ph += '<button class="page-btn" data-page="1">1</button>';
+        if (sp > 2) ph += '<span style="color:var(--text-dim)">\u2026</span>';
+      }
+      for (let p = sp; p <= ep; p++) {
+        ph += '<button class="page-btn' + (p === currentPage ? " active" : "") + '" data-page="' + p + '">' + p + "</button>";
+      }
+      if (ep < totalPaginationPages) {
+        if (ep < totalPaginationPages - 1) ph += '<span style="color:var(--text-dim)">\u2026</span>';
+        ph += '<button class="page-btn" data-page="' + totalPaginationPages + '">' + totalPaginationPages + "</button>";
+      }
+
+      ph += '<button class="page-btn" data-page="' + (currentPage + 1) + '"' + (currentPage === totalPaginationPages ? " disabled" : "") + ">Next</button>";
+      paginationEl.innerHTML = ph;
+    }
+  }
+
+  /* ── Event delegation ── */
+
+  pageCardsEl.addEventListener("click", (e) => {
+    const header = e.target.closest(".page-card-header");
+    if (header) {
+      const card = header.closest(".page-card");
+      const url = card.dataset.pageUrl;
+      card.classList.toggle("open");
+      if (card.classList.contains("open")) expandedPageCards.add(url);
+      else expandedPageCards.delete(url);
+      return;
+    }
+
+    const summary = e.target.closest(".issue-summary");
+    if (summary) {
+      const row = summary.closest(".issue-row");
+      const id = row.dataset.issueId;
+      row.classList.toggle("open");
+      if (row.classList.contains("open")) expandedIssueRows.add(id);
+      else expandedIssueRows.delete(id);
+    }
+  });
+
+  paginationEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".page-btn");
+    if (!btn || btn.disabled) return;
+    currentPage = parseInt(btn.dataset.page);
+    renderPages();
+    issuesContainer.scrollIntoView({ behavior: "smooth" });
+  });
+
+  /* ── Filters ── */
+
+  document.querySelectorAll(".pill").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const filter = btn.dataset.filter;
+      currentFilter = filter;
+      currentPage = 1;
+      document.querySelectorAll(".pill").forEach(b => b.classList.remove("active", "active-error", "active-warning", "active-info"));
+      if (filter === "all") btn.classList.add("active");
+      else if (filter === "error") btn.classList.add("active-error");
+      else if (filter === "warning") btn.classList.add("active-warning");
+      else if (filter === "info") btn.classList.add("active-info");
+      renderPages();
+    });
+  });
+
+  searchInput.addEventListener("input", () => {
+    currentSearch = searchInput.value;
+    currentPage = 1;
+    renderPages();
+  });
+
+  /* ── Actions ── */
+
+  csvBtn.addEventListener("click", () => {
+    if (!currentCrawlId) return;
+    window.location.href = `/crawl/${currentCrawlId}/csv`;
+  });
+
+  newCrawlBtn.addEventListener("click", () => {
+    resultsSection.classList.add("hidden");
+    urlInput.value = "";
+    urlInput.focus();
+  });
+})();
+</script>
+</body>
+</html>
