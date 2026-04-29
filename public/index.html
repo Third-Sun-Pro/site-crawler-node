@@ -841,6 +841,9 @@ select:focus { border-color: var(--purple); }
             <label class="checkbox-label">
               <input type="checkbox" id="opt-skip-seo"> Skip SEO checks
             </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="opt-skip-sitemap"> Skip sitemap.xml seeding
+            </label>
           </div>
         </div>
 
@@ -1206,6 +1209,7 @@ select:focus { border-color: var(--purple); }
       skip_performance: document.getElementById("opt-skip-performance").checked,
       skip_schema: document.getElementById("opt-skip-schema").checked,
       skip_seo: document.getElementById("opt-skip-seo").checked,
+      skip_sitemap: document.getElementById("opt-skip-sitemap").checked,
     };
 
     crawlBtn.disabled = true;

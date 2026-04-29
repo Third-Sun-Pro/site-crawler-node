@@ -44,6 +44,7 @@ npm run test:watch      # Watch mode
   - `models.js` — Issue / IssueType / PageResult shapes
   - `csv-reporter.js` — CSV output
   - `audit-store.js` — Persists each completed audit to `DATA_DIR/audits/<urlHash>.json` (newest 10 per site) and computes diffs vs the previous audit (resolved / persisting / new counts plus per-issue change_status)
+  - `sitemap-fetcher.js` — Before each crawl, fetches `/sitemap.xml` (or `/sitemap_index.xml` as fallback), parses `<loc>` entries, and seeds the URL queue with everything advertised by the site. Handles sitemap-index recursion (one level), filters out cross-domain URLs, caps total at `maxSitemapUrls` (default 500). Best-effort — sitemap absence or parse failure never blocks the crawl, link-following still happens.
   - `analyzers/` — modular issue detectors (all extend `base.js`)
     - `accessibility-analyzer.js`, `button-analyzer.js`, `form-analyzer.js`, `grammar-analyzer.js`, `image-analyzer.js`, `joomla-analyzer.js`, `link-analyzer.js`, `payment-analyzer.js`, `performance-analyzer.js`
 - `public/index.html` — Single-page web UI with live progress

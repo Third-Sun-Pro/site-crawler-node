@@ -18,6 +18,8 @@ const CrawlerConfigSchema = z.object({
   skipPerformance: z.boolean().default(false),
   skipSchema: z.boolean().default(false),
   skipSeo: z.boolean().default(false),
+  skipSitemap: z.boolean().default(false),
+  maxSitemapUrls: z.number().int().min(1).default(500),
   userAgent: z.string().default("JoomlaCrawler/1.0 (Site Audit Tool)"),
   followRedirects: z.boolean().default(true),
   maxRetries: z.number().int().min(0).default(3),

@@ -18,6 +18,7 @@ const { PaymentAnalyzer } = require("./analyzers/payment-analyzer");
 const { PerformanceAnalyzer } = require("./analyzers/performance-analyzer");
 const { SchemaAnalyzer } = require("./analyzers/schema-analyzer");
 const { SEOAnalyzer } = require("./analyzers/seo-analyzer");
+const { fetchSitemapUrls } = require("./sitemap-fetcher");
 
 class Crawler extends EventEmitter {
   constructor(config) {
@@ -61,6 +62,25 @@ class Crawler extends EventEmitter {
   async crawl() {
     // Setup
     if (this.grammarAnalyzer) await this.grammarAnalyzer.setup();
+
+    // Seed the URL queue from sitemap.xml so orphan pages get audited.
+    // Best-effort: failures are logged but the crawl continues with link-following.
+    if (!this.config.skipSitemap) {
+      try {
+        const sitemapUrls = await fetchSitemapUrls(this.config.startUrl, this.fetcher, {
+          maxUrls: this.config.maxSitemapUrls,
+        });
+        let added = 0;
+        for (const url of sitemapUrls) {
+          if (this.urlManager.addUrl(url)) added++;
+        }
+        if (added > 0) {
+          this.emit("progress", { pages: 0, issues: 0, url: `Sitemap: queued ${added} URL${added === 1 ? "" : "s"}` });
+        }
+      } catch (err) {
+        // Silent — sitemap discovery is optional
+      }
+    }
 
     const allIssues = [];
 

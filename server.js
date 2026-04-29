@@ -194,6 +194,7 @@ app.post("/crawl", requireAuth, crawlLimiter, (req, res) => {
   const skipPerformance = !!data.skip_performance;
   const skipSchema = !!data.skip_schema;
   const skipSeo = !!data.skip_seo;
+  const skipSitemap = !!data.skip_sitemap;
 
   let config;
   try {
@@ -211,6 +212,7 @@ app.post("/crawl", requireAuth, crawlLimiter, (req, res) => {
       skipPerformance,
       skipSchema,
       skipSeo,
+      skipSitemap,
     });
   } catch (err) {
     return res.status(400).json({ error: `Invalid configuration: ${err.message}` });
