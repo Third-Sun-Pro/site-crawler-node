@@ -377,6 +377,27 @@ select:focus { border-color: var(--purple); }
 @media (max-width: 600px) {
   .diff-banner-date { margin-left: 0; }
 }
+
+.hub-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1rem;
+  background: rgba(255,213,79,0.08);
+  border: 1px solid rgba(255,213,79,0.25);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.hub-banner-icon { font-size: 1rem; }
+.hub-banner-client { font-weight: 700; color: var(--amber); }
+.hub-banner-status { margin-left: auto; color: var(--text-dim); font-size: 0.78rem; }
+.hub-banner-status.saved { color: var(--mint); }
+.hub-banner-status.failed { color: var(--coral-light); }
+@media (max-width: 600px) {
+  .hub-banner-status { margin-left: 0; }
+}
 .badge-info { background: rgba(100,181,246,0.12); color: var(--sky); }
 
 /* ── Page Cards ── */
@@ -772,6 +793,7 @@ select:focus { border-color: var(--purple); }
 
     <!-- Config panel -->
     <div class="panel" id="config-panel">
+      <div id="hub-banner" class="hub-banner hidden"></div>
       <div class="panel-header">New Crawl</div>
       <form id="crawl-form">
         <div class="form-group">
@@ -957,6 +979,55 @@ select:focus { border-color: var(--purple); }
   const crawlForm = document.getElementById("crawl-form");
   const urlInput = document.getElementById("url-input");
   const maxPagesSelect = document.getElementById("max-pages");
+  const hubBanner = document.getElementById("hub-banner");
+
+  // Client Hub integration: read URL params on load
+  const hubParams = new URLSearchParams(window.location.search);
+  const hubClientId = hubParams.get("hubClient");
+  const hubClientName = hubParams.get("clientName") || "";
+  const hubWebsiteUrl = hubParams.get("websiteUrl") || "";
+  const HUB_BASE = "https://hub.tsapp.us";
+
+  if (hubClientId) {
+    if (hubWebsiteUrl) urlInput.value = hubWebsiteUrl;
+    renderHubBanner("ready");
+  }
+
+  function renderHubBanner(state, extra) {
+    if (!hubClientId) return;
+    let statusHTML = '<span class="hub-banner-status">will save audit summary on completion</span>';
+    if (state === "saving") statusHTML = '<span class="hub-banner-status">saving to hub…</span>';
+    if (state === "saved") statusHTML = '<span class="hub-banner-status saved">✓ saved to Client Hub</span>';
+    if (state === "failed") statusHTML = '<span class="hub-banner-status failed">⚠ could not save (' + escapeHubError(extra) + ')</span>';
+    hubBanner.innerHTML =
+      '<span class="hub-banner-icon">\u{1F517}</span>' +
+      '<span>Auditing for <span class="hub-banner-client">' + escapeHubError(hubClientName || "Client") + '</span></span>' +
+      statusHTML;
+    hubBanner.classList.remove("hidden");
+  }
+
+  function escapeHubError(s) {
+    const div = document.createElement("div");
+    div.textContent = String(s || "");
+    return div.innerHTML;
+  }
+
+  async function saveToHub(summary) {
+    if (!hubClientId) return;
+    renderHubBanner("saving");
+    try {
+      const res = await fetch(`${HUB_BASE}/api/hub/save/${encodeURIComponent(hubClientId)}/crawl`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(summary),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      renderHubBanner("saved");
+    } catch (err) {
+      console.warn("[Hub] Save failed:", err);
+      renderHubBanner("failed", err.message);
+    }
+  }
   const crawlBtn = document.getElementById("crawl-btn");
   const cancelBtn = document.getElementById("cancel-btn");
   const crawlError = document.getElementById("crawl-error");
@@ -1238,6 +1309,19 @@ select:focus { border-color: var(--purple); }
     countInfo.textContent = info;
     countPages.textContent = pagesCrawled;
     renderSummary(pagesCrawled, issues);
+
+    if (hubClientId) {
+      saveToHub({
+        url: urlInput.value.trim(),
+        completedAt: new Date().toISOString(),
+        issues: issues.length,
+        score: calculateHealthScore(issues, pagesCrawled),
+        errors,
+        warnings,
+        info,
+        pages: pagesCrawled,
+      });
+    }
 
     if (issues.length === 0) {
       noIssues.classList.remove("hidden");

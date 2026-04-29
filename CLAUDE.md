@@ -72,6 +72,21 @@ The Schema analyzer detects JSON-LD and Microdata, validates JSON-LD syntax, che
 - Reports are CSVs with columns: priority, type, description, page, element, suggestion
 - Use the Python version (`../site-crawler/`) if you need dynamic-interaction testing (Playwright button/form clicking)
 
+## Client Hub Integration
+
+Launched from a client record in the [Client Hub](https://hub.tsapp.us), the crawler reads URL params (`hubClient`, `clientName`, `websiteUrl`, etc.) and:
+
+1. Pre-fills the URL field with the client's `websiteUrl`
+2. Shows a small banner at the top: "Auditing for [Client Name] — will save audit summary on completion"
+3. After the crawl finishes, POSTs a summary to `https://hub.tsapp.us/api/hub/save/<hubClient>/crawl` with: `{ url, completedAt, issues, score, errors, warnings, info, pages }`
+4. Banner updates to "✓ saved to Client Hub" (or "⚠ could not save (...)" on failure — non-blocking; crawl results still display)
+
+The hub stores one `crawl` attachment per client (latest only — overwrites on each new audit). The hub already renders this in the client detail modal: `12 issues found · Score: 87`.
+
+If the URL is opened directly (no `hubClient` param), the integration is fully invisible — same UI as before.
+
+CORS: the hub allows requests from any `*.tsapp.us` origin, so the cross-origin POST works in production.
+
 ## Audit History
 
 After every completed crawl the report is persisted to `DATA_DIR/audits/<urlHash>.json` (where `urlHash` is a hash of the normalized startUrl — same domain + path collapses to the same file). The most recent 10 audits per site are kept; older ones are dropped.
