@@ -12,7 +12,7 @@ Hostinger doesn't run Python well. The Node port keeps the same analyzer archite
 
 Node.js + Express 5, cheerio (HTML parsing), p-limit (concurrency), zod (config validation), csv-stringify (report output), express-rate-limit, cookie-parser. Vanilla HTML/CSS/JS frontend with Server-Sent Events for live progress. Vitest + Supertest for tests.
 
-**No Playwright / no headless browser** — unlike the Python version, this one is static-HTML only. Dynamic-interaction testing (the Python `dynamic_analyzer`) is not available here because Hostinger can't run a browser.
+**No Playwright / no headless browser** — unlike the Python version, this one is static-HTML only. Dynamic-interaction testing is not available here because Hostinger can't run a browser. If you need to actually click buttons or submit forms during an audit, use the Python version (`../site-crawler/`) locally.
 
 ## How to Run
 

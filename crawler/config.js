@@ -21,12 +21,6 @@ const CrawlerConfigSchema = z.object({
   userAgent: z.string().default("JoomlaCrawler/1.0 (Site Audit Tool)"),
   followRedirects: z.boolean().default(true),
   maxRetries: z.number().int().min(0).default(3),
-  enableDynamicTesting: z.boolean().default(false),
-  headless: z.boolean().default(true),
-  dynamicTimeout: z.number().int().min(1).default(10),
-  testFormSubmission: z.boolean().default(false),
-  formTestEmail: z.string().default("test@example.com"),
-  dynamicTestLimit: z.number().int().min(1).default(10),
 });
 
 function createConfig(input) {

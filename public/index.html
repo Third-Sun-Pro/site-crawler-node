@@ -802,9 +802,6 @@ select:focus { border-color: var(--purple); }
               <input type="checkbox" id="opt-grammar"> Enable grammar checking
             </label>
             <label class="checkbox-label">
-              <input type="checkbox" id="opt-dynamic"> Enable dynamic testing
-            </label>
-            <label class="checkbox-label">
               <input type="checkbox" id="opt-skip-external" checked> Skip external links
             </label>
             <label class="checkbox-label">
@@ -1138,7 +1135,6 @@ select:focus { border-color: var(--purple); }
       skip_performance: document.getElementById("opt-skip-performance").checked,
       skip_schema: document.getElementById("opt-skip-schema").checked,
       skip_seo: document.getElementById("opt-skip-seo").checked,
-      skip_dynamic: !document.getElementById("opt-dynamic").checked,
     };
 
     crawlBtn.disabled = true;

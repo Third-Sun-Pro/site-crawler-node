@@ -16,7 +16,6 @@ const { FormAnalyzer } = require("./analyzers/form-analyzer");
 const { JoomlaAnalyzer } = require("./analyzers/joomla-analyzer");
 const { PaymentAnalyzer } = require("./analyzers/payment-analyzer");
 const { PerformanceAnalyzer } = require("./analyzers/performance-analyzer");
-const { DynamicAnalyzer } = require("./analyzers/dynamic-analyzer");
 const { SchemaAnalyzer } = require("./analyzers/schema-analyzer");
 const { SEOAnalyzer } = require("./analyzers/seo-analyzer");
 
@@ -53,7 +52,6 @@ class Crawler extends EventEmitter {
     this.performanceAnalyzer = config.skipPerformance ? null : new PerformanceAnalyzer();
     this.schemaAnalyzer = config.skipSchema ? null : new SchemaAnalyzer();
     this.seoAnalyzer = config.skipSeo ? null : new SEOAnalyzer();
-    this.dynamicAnalyzer = config.enableDynamicTesting ? new DynamicAnalyzer() : null;
 
     // Stats
     this._pagesCrawled = 0;
@@ -63,7 +61,6 @@ class Crawler extends EventEmitter {
   async crawl() {
     // Setup
     if (this.grammarAnalyzer) await this.grammarAnalyzer.setup();
-    if (this.dynamicAnalyzer) await this.dynamicAnalyzer.setup();
 
     const allIssues = [];
 
@@ -164,11 +161,6 @@ class Crawler extends EventEmitter {
           pageIssues.push(...seoIssues);
         }
 
-        if (this.dynamicAnalyzer && this.dynamicAnalyzer.isAvailable) {
-          const dynIssues = await this.dynamicAnalyzer.analyze(url, { buttons, forms });
-          pageIssues.push(...dynIssues);
-        }
-
         allIssues.push(...pageIssues);
         this._issuesFound += pageIssues.length;
 
@@ -180,7 +172,6 @@ class Crawler extends EventEmitter {
       }
     } finally {
       if (this.grammarAnalyzer) await this.grammarAnalyzer.teardown();
-      if (this.dynamicAnalyzer) await this.dynamicAnalyzer.teardown();
     }
 
     return allIssues;

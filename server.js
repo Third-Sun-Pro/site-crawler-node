@@ -190,7 +190,6 @@ app.post("/crawl", requireAuth, crawlLimiter, (req, res) => {
   const skipGrammar = data.skip_grammar !== false; // default true
   const skipExternal = !!data.skip_external;
   const skipForms = !!data.skip_forms;
-  const skipDynamic = data.skip_dynamic !== false; // default true
   const skipJoomla = !!data.skip_joomla;
   const skipPerformance = !!data.skip_performance;
   const skipSchema = !!data.skip_schema;
@@ -212,7 +211,6 @@ app.post("/crawl", requireAuth, crawlLimiter, (req, res) => {
       skipPerformance,
       skipSchema,
       skipSeo,
-      enableDynamicTesting: !skipDynamic,
     });
   } catch (err) {
     return res.status(400).json({ error: `Invalid configuration: ${err.message}` });
