@@ -26,6 +26,7 @@ npm run test:watch      # Watch mode
 ## Environment Variables (.env)
 
 - `APP_PASSWORD` — required (team login; also used as HMAC auth secret)
+- `DATA_DIR` — **must be set in production** to a path outside the deploy folder (e.g. `../data`). Defaults to `./data` which lives inside the deploy folder and gets wiped on every Hostinger deploy. Stores the audit-history JSON files. Server logs a warning at startup if `NODE_ENV=production` and this isn't set.
 - `PORT` — optional, defaults to 3000
 - `NODE_ENV` — set to `production` on deploy
 
@@ -42,6 +43,7 @@ npm run test:watch      # Watch mode
   - `url-manager.js` — URL queue and visit tracking
   - `models.js` — Issue / IssueType / PageResult shapes
   - `csv-reporter.js` — CSV output
+  - `audit-store.js` — Persists each completed audit to `DATA_DIR/audits/<urlHash>.json` (newest 10 per site) and computes diffs vs the previous audit (resolved / persisting / new counts plus per-issue change_status)
   - `analyzers/` — modular issue detectors (all extend `base.js`)
     - `accessibility-analyzer.js`, `button-analyzer.js`, `form-analyzer.js`, `grammar-analyzer.js`, `image-analyzer.js`, `joomla-analyzer.js`, `link-analyzer.js`, `payment-analyzer.js`, `performance-analyzer.js`
 - `public/index.html` — Single-page web UI with live progress
@@ -70,11 +72,21 @@ The Schema analyzer detects JSON-LD and Microdata, validates JSON-LD syntax, che
 - Reports are CSVs with columns: priority, type, description, page, element, suggestion
 - Use the Python version (`../site-crawler/`) if you need dynamic-interaction testing (Playwright button/form clicking)
 
+## Audit History
+
+After every completed crawl the report is persisted to `DATA_DIR/audits/<urlHash>.json` (where `urlHash` is a hash of the normalized startUrl — same domain + path collapses to the same file). The most recent 10 audits per site are kept; older ones are dropped.
+
+When the same URL is audited again, the server compares against the most recent prior audit and surfaces three counts (resolved / persisting / new) in a banner above the report. Each individual issue is tagged with a `NEW` or `PERSISTING` badge based on a stable fingerprint (issueType + pageUrl + targetUrl + elementText — message text is intentionally excluded since it embeds counts that change as fixes land).
+
+URL normalization for audit identity: lowercase host (with leading `www.` stripped), lowercase path with no trailing slash, query string and fragment dropped. So `example.com`, `EXAMPLE.com`, `example.com/`, and `example.com/?utm=x` all share the same audit history.
+
+To wipe history for one site: delete the matching `<urlHash>.json` file from `DATA_DIR/audits/`. To wipe all history: delete the whole `audits/` folder.
+
 ## Deployment
 
 Deployed at **crawler.tsapp.us** on Hostinger (auto-deploy from GitHub push).
 
-`.env` created **manually** on the server. Hostinger wipes the app directory on deploy — keep persistent data outside the deploy folder.
+`.env` created **manually** on the server. Hostinger wipes the app directory on deploy — keep persistent data outside the deploy folder. Audit history depends on `DATA_DIR` being set (see Environment Variables).
 
 ## Git
 

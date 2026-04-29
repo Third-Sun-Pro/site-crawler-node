@@ -15,6 +15,7 @@ const rateLimit = require("express-rate-limit");
 const { createConfig } = require("./crawler/config");
 const { Crawler } = require("./crawler/crawler");
 const { generateCSV, COLUMNS } = require("./crawler/csv-reporter");
+const auditStore = require("./crawler/audit-store");
 
 // ---------------------------------------------------------------------------
 // Structured logging (matches Brief Generator pattern)
@@ -36,6 +37,12 @@ if (!APP_PASSWORD) {
 }
 const AUTH_SECRET = APP_PASSWORD;
 const isTest = process.env.NODE_ENV === "test";
+
+// Audit history needs DATA_DIR set outside the deploy folder in production —
+// otherwise Hostinger wipes the history on every push.
+if (process.env.NODE_ENV === "production" && !process.env.DATA_DIR) {
+  log("warn", "DATA_DIR is not set in production — audit history will be wiped on the next Hostinger deploy. Set DATA_DIR=../data (or another path outside the app folder).");
+}
 
 // ---------------------------------------------------------------------------
 // Auth helpers (HMAC-signed cookie, matching Brief Generator pattern)
@@ -93,6 +100,7 @@ class CrawlJob {
     this.linksChecked = 0;
     this.done = false;
     this.error = null;
+    this.diff = null; // populated after crawl if a prior audit existed
     this.createdAt = Date.now();
     this.listeners = new Set(); // SSE response objects
   }
@@ -243,7 +251,8 @@ app.get("/crawl/:crawlId/stream", requireAuth, (req, res) => {
         total_issues: job.issues.length,
         pages_crawled: job.pagesCrawled,
         links_checked: job.linksChecked,
-        issues: job.issues.map((i) => i.toJSON()),
+        issues: applyChangeStatus(job.issues.map((i) => i.toJSON()), job.diff),
+        diff: job.diff,
       })}\n\n`);
     }
     res.end();
@@ -301,12 +310,25 @@ async function runCrawl(job, config) {
     job.pagesCrawled = crawler.pagesCrawled;
     job.linksChecked = crawler.linksChecked;
 
+    // Compare against previous audit and persist this run. Best-effort: any
+    // failure here is logged inside audit-store and the crawl still completes.
+    const previousAudit = auditStore.getLastAudit(job.url);
+    job.diff = auditStore.computeDiff(issues, previousAudit);
+    auditStore.saveAudit(job.url, {
+      totalPages: crawler.pagesCrawled,
+      issues,
+      completedAt: new Date().toISOString(),
+    });
+
+    const issuesJSON = applyChangeStatus(issues.map((i) => i.toJSON()), job.diff);
+
     job.send({
       type: "complete",
       total_issues: issues.length,
       pages_crawled: crawler.pagesCrawled,
       links_checked: crawler.linksChecked,
-      issues: issues.map((i) => i.toJSON()),
+      issues: issuesJSON,
+      diff: job.diff,
     });
   } catch (err) {
     job.error = err.message;
@@ -320,6 +342,16 @@ async function runCrawl(job, config) {
     }
     job.listeners.clear();
   }
+}
+
+// Tag each issue JSON with change_status ("new" or "persisting") based on the
+// computed diff. Order of issuesJSON matches diff.changeStatus.
+function applyChangeStatus(issuesJSON, diff) {
+  if (!diff || !Array.isArray(diff.changeStatus)) return issuesJSON;
+  return issuesJSON.map((issue, idx) => ({
+    ...issue,
+    change_status: diff.changeStatus[idx],
+  }));
 }
 
 // ---------------------------------------------------------------------------

@@ -352,6 +352,31 @@ select:focus { border-color: var(--purple); }
 }
 .badge-error { background: rgba(255,107,107,0.15); color: var(--coral-light); }
 .badge-warning { background: rgba(255,213,79,0.12); color: var(--amber); }
+.badge-new { background: rgba(255,107,107,0.18); color: var(--coral-light); border: 1px solid rgba(255,107,107,0.4); }
+.badge-persisting { background: rgba(120,120,140,0.18); color: var(--text-dim); border: 1px solid rgba(120,120,140,0.3); }
+
+.diff-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1rem;
+  background: rgba(100,181,246,0.08);
+  border: 1px solid rgba(100,181,246,0.25);
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+.diff-banner-label { font-weight: 700; color: var(--sky); }
+.diff-stat { display: inline-flex; align-items: center; gap: 0.4rem; }
+.diff-stat-num { font-weight: 700; }
+.diff-stat-resolved { color: var(--mint); }
+.diff-stat-new { color: var(--coral-light); }
+.diff-stat-persisting { color: var(--text-dim); }
+.diff-banner-date { color: var(--text-dim); margin-left: auto; font-size: 0.8rem; }
+@media (max-width: 600px) {
+  .diff-banner-date { margin-left: 0; }
+}
 .badge-info { background: rgba(100,181,246,0.12); color: var(--sky); }
 
 /* ── Page Cards ── */
@@ -823,6 +848,7 @@ select:focus { border-color: var(--purple); }
 
     <!-- Results -->
     <div id="results-section" class="hidden">
+      <div id="diff-banner" class="diff-banner hidden"></div>
       <div class="summary-row">
         <div class="stat-card errors">
           <div class="num" id="count-errors">0</div>
@@ -1172,7 +1198,7 @@ select:focus { border-color: var(--purple); }
             progressUrl.textContent = msg.url;
           } else if (msg.type === "complete") {
             allIssues = msg.issues || [];
-            showResults(msg.pages_crawled, msg.links_checked, allIssues);
+            showResults(msg.pages_crawled, msg.links_checked, allIssues, msg.diff || null);
           } else if (msg.type === "error") {
             throw new Error(msg.message);
           }
@@ -1201,10 +1227,11 @@ select:focus { border-color: var(--purple); }
 
   /* ── Results ── */
 
-  function showResults(pagesCrawled, linksChecked, issues) {
+  function showResults(pagesCrawled, linksChecked, issues, diff) {
     stopTimer();
     progressSection.classList.add("hidden");
     resultsSection.classList.remove("hidden");
+    renderDiffBanner(diff);
 
     const errors = issues.filter(i => i.severity === "error").length;
     const warnings = issues.filter(i => i.severity === "warning").length;
@@ -1238,6 +1265,27 @@ select:focus { border-color: var(--purple); }
     const div = document.createElement("div");
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  function renderDiffBanner(diff) {
+    const banner = document.getElementById("diff-banner");
+    if (!diff) {
+      banner.classList.add("hidden");
+      banner.innerHTML = "";
+      return;
+    }
+    let dateLabel = "previous audit";
+    try {
+      const d = new Date(diff.prevDate);
+      dateLabel = d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    } catch (_) {}
+    banner.innerHTML =
+      '<span class="diff-banner-label">vs. previous audit</span>' +
+      '<span class="diff-stat"><span class="diff-stat-num diff-stat-resolved">' + diff.resolvedCount + '</span> resolved</span>' +
+      '<span class="diff-stat"><span class="diff-stat-num diff-stat-persisting">' + diff.persistingCount + '</span> persisting</span>' +
+      '<span class="diff-stat"><span class="diff-stat-num diff-stat-new">' + diff.newCount + '</span> new</span>' +
+      '<span class="diff-banner-date">last run ' + escapeHtml(dateLabel) + '</span>';
+    banner.classList.remove("hidden");
   }
 
   /* ── Crawl Summary ── */
@@ -1468,6 +1516,11 @@ select:focus { border-color: var(--purple); }
         html += '<div class="issue-row' + (isIssueOpen ? " open" : "") + '" data-issue-id="' + escapeHtml(issue.id) + '">';
         html += '<div class="issue-summary">';
         html += '<span class="badge ' + bc + '">' + escapeHtml(issue.severity_label) + "</span>";
+        if (issue.change_status === "new") {
+          html += '<span class="badge badge-new" title="New since last audit">NEW</span>';
+        } else if (issue.change_status === "persisting") {
+          html += '<span class="badge badge-persisting" title="Was present in the previous audit too">PERSISTING</span>';
+        }
         html += '<span class="issue-type">' + escapeHtml(issue.issue_type_label) + "</span>";
         html += '<span class="issue-message">' + escapeHtml(issue.message) + "</span>";
         html += '<span class="issue-expand-icon">+</span>';
