@@ -8,8 +8,8 @@ import {
 } from "../crawler/models.js";
 
 describe("IssueType", () => {
-  it("has 50 issue types", () => {
-    expect(Object.keys(IssueType)).toHaveLength(50);
+  it("has 62 issue types", () => {
+    expect(Object.keys(IssueType)).toHaveLength(62);
   });
 
   it("all issue types have severity mappings", () => {

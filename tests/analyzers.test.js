@@ -7,6 +7,8 @@ import { FormAnalyzer } from "../crawler/analyzers/form-analyzer.js";
 import { AccessibilityAnalyzer } from "../crawler/analyzers/accessibility-analyzer.js";
 import { PerformanceAnalyzer } from "../crawler/analyzers/performance-analyzer.js";
 import { JoomlaAnalyzer } from "../crawler/analyzers/joomla-analyzer.js";
+import { SchemaAnalyzer } from "../crawler/analyzers/schema-analyzer.js";
+import { SEOAnalyzer } from "../crawler/analyzers/seo-analyzer.js";
 
 const URL = "https://example.com/page";
 
@@ -205,5 +207,99 @@ describe("JoomlaAnalyzer", () => {
     const html = '<html><head><meta name="generator" content="Joomla!"></head><body>0 - Component not found</body></html>';
     const issues = await analyzer.analyze(URL, { htmlContent: html });
     expect(issues.some((i) => i.issueType === IssueType.JOOMLA_ERROR_PAGE)).toBe(true);
+  });
+});
+
+describe("SchemaAnalyzer", () => {
+  const analyzer = new SchemaAnalyzer();
+
+  it("flags missing schema markup", async () => {
+    const html = "<html><head></head><body><p>Hi</p></body></html>";
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SCHEMA_MISSING)).toBe(true);
+  });
+
+  it("recognizes valid JSON-LD and reports types found", async () => {
+    const html = `<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"Acme"}</script></head><body></body></html>`;
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SCHEMA_MISSING)).toBe(false);
+    const found = issues.find((i) => i.issueType === IssueType.SCHEMA_FOUND);
+    expect(found).toBeDefined();
+    expect(found.message).toContain("LocalBusiness");
+  });
+
+  it("flags invalid JSON syntax in JSON-LD", async () => {
+    const html = `<html><head><script type="application/ld+json">{not valid json}</script></head><body></body></html>`;
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SCHEMA_INVALID_JSON_LD)).toBe(true);
+  });
+
+  it("flags JSON-LD missing required @context/@type", async () => {
+    const html = `<html><head><script type="application/ld+json">{"name":"Acme"}</script></head><body></body></html>`;
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SCHEMA_INCOMPLETE)).toBe(true);
+  });
+
+  it("recognizes Microdata via itemscope/itemtype", async () => {
+    const html = `<html><body><div itemscope itemtype="https://schema.org/Person"><span itemprop="name">Jane</span></div></body></html>`;
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SCHEMA_MISSING)).toBe(false);
+    const found = issues.find((i) => i.issueType === IssueType.SCHEMA_FOUND);
+    expect(found.message).toContain("Person");
+  });
+});
+
+describe("SEOAnalyzer", () => {
+  const analyzer = new SEOAnalyzer();
+
+  it("flags missing title", async () => {
+    const html = "<html><head></head><body></body></html>";
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SEO_MISSING_TITLE)).toBe(true);
+  });
+
+  it("flags too-short title", async () => {
+    const html = "<html><head><title>Hi</title></head><body></body></html>";
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SEO_SHORT_TITLE)).toBe(true);
+  });
+
+  it("flags too-long title", async () => {
+    const longTitle = "x".repeat(80);
+    const html = `<html><head><title>${longTitle}</title></head><body></body></html>`;
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SEO_LONG_TITLE)).toBe(true);
+  });
+
+  it("accepts a well-sized title and meta description", async () => {
+    const desc = "x".repeat(100);
+    const html = `<html><head><title>Acme Web Design Studio</title><meta name="description" content="${desc}"><link rel="canonical" href="https://example.com/page"></head><body></body></html>`;
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    const flagged = issues.filter((i) => [
+      IssueType.SEO_MISSING_TITLE, IssueType.SEO_SHORT_TITLE, IssueType.SEO_LONG_TITLE,
+      IssueType.SEO_MISSING_META_DESC, IssueType.SEO_SHORT_META_DESC, IssueType.SEO_LONG_META_DESC,
+      IssueType.SEO_MISSING_CANONICAL,
+    ].includes(i.issueType));
+    expect(flagged).toHaveLength(0);
+  });
+
+  it("flags noindex via robots meta", async () => {
+    const html = `<html><head><title>Acme Web Design</title><meta name="robots" content="noindex, nofollow"></head><body></body></html>`;
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SEO_AI_CRAWLER_BLOCKED)).toBe(true);
+  });
+
+  it("flags AI-specific bot blocking (GPTBot)", async () => {
+    const html = `<html><head><title>Acme Web Design Studio</title><meta name="GPTBot" content="noindex"></head><body></body></html>`;
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    const blocked = issues.find((i) => i.issueType === IssueType.SEO_AI_CRAWLER_BLOCKED);
+    expect(blocked).toBeDefined();
+    expect(blocked.message.toLowerCase()).toContain("gptbot");
+  });
+
+  it("flags missing canonical", async () => {
+    const html = `<html><head><title>Acme Web Design Studio</title></head><body></body></html>`;
+    const issues = await analyzer.analyze(URL, { htmlContent: html });
+    expect(issues.some((i) => i.issueType === IssueType.SEO_MISSING_CANONICAL)).toBe(true);
   });
 });

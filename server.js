@@ -185,6 +185,8 @@ app.post("/crawl", requireAuth, crawlLimiter, (req, res) => {
   const skipDynamic = data.skip_dynamic !== false; // default true
   const skipJoomla = !!data.skip_joomla;
   const skipPerformance = !!data.skip_performance;
+  const skipSchema = !!data.skip_schema;
+  const skipSeo = !!data.skip_seo;
 
   let config;
   try {
@@ -200,6 +202,8 @@ app.post("/crawl", requireAuth, crawlLimiter, (req, res) => {
       skipForms,
       skipJoomla,
       skipPerformance,
+      skipSchema,
+      skipSeo,
       enableDynamicTesting: !skipDynamic,
     });
   } catch (err) {

@@ -73,6 +73,20 @@ const IssueType = Object.freeze({
   PERF_MISSING_VIEWPORT: "perf_missing_viewport",
   PERF_INLINE_STYLE_BLOCK: "perf_inline_style_block",
   PERF_UNMINIFIED_ASSETS: "perf_unminified_assets",
+  // Schema / structured data
+  SCHEMA_MISSING: "schema_missing",
+  SCHEMA_INVALID_JSON_LD: "schema_invalid_json_ld",
+  SCHEMA_INCOMPLETE: "schema_incomplete",
+  SCHEMA_FOUND: "schema_found",
+  // SEO
+  SEO_MISSING_TITLE: "seo_missing_title",
+  SEO_SHORT_TITLE: "seo_short_title",
+  SEO_LONG_TITLE: "seo_long_title",
+  SEO_MISSING_META_DESC: "seo_missing_meta_desc",
+  SEO_SHORT_META_DESC: "seo_short_meta_desc",
+  SEO_LONG_META_DESC: "seo_long_meta_desc",
+  SEO_MISSING_CANONICAL: "seo_missing_canonical",
+  SEO_AI_CRAWLER_BLOCKED: "seo_ai_crawler_blocked",
 });
 
 // Mapping of issue types to severities
@@ -127,6 +141,18 @@ const ISSUE_SEVERITY = {
   [IssueType.PERF_MISSING_VIEWPORT]: Severity.WARNING,
   [IssueType.PERF_INLINE_STYLE_BLOCK]: Severity.INFO,
   [IssueType.PERF_UNMINIFIED_ASSETS]: Severity.INFO,
+  [IssueType.SCHEMA_MISSING]: Severity.WARNING,
+  [IssueType.SCHEMA_INVALID_JSON_LD]: Severity.ERROR,
+  [IssueType.SCHEMA_INCOMPLETE]: Severity.WARNING,
+  [IssueType.SCHEMA_FOUND]: Severity.INFO,
+  [IssueType.SEO_MISSING_TITLE]: Severity.ERROR,
+  [IssueType.SEO_SHORT_TITLE]: Severity.WARNING,
+  [IssueType.SEO_LONG_TITLE]: Severity.WARNING,
+  [IssueType.SEO_MISSING_META_DESC]: Severity.WARNING,
+  [IssueType.SEO_SHORT_META_DESC]: Severity.INFO,
+  [IssueType.SEO_LONG_META_DESC]: Severity.INFO,
+  [IssueType.SEO_MISSING_CANONICAL]: Severity.INFO,
+  [IssueType.SEO_AI_CRAWLER_BLOCKED]: Severity.ERROR,
 };
 
 // Human-readable labels
@@ -181,6 +207,18 @@ const ISSUE_TYPE_LABELS = {
   [IssueType.PERF_MISSING_VIEWPORT]: "Missing Viewport Meta",
   [IssueType.PERF_INLINE_STYLE_BLOCK]: "Large Inline Style Block",
   [IssueType.PERF_UNMINIFIED_ASSETS]: "Unminified Asset",
+  [IssueType.SCHEMA_MISSING]: "Schema Markup Missing",
+  [IssueType.SCHEMA_INVALID_JSON_LD]: "Invalid JSON-LD",
+  [IssueType.SCHEMA_INCOMPLETE]: "Schema Missing Required Fields",
+  [IssueType.SCHEMA_FOUND]: "Schema Types Detected",
+  [IssueType.SEO_MISSING_TITLE]: "Missing Title Tag",
+  [IssueType.SEO_SHORT_TITLE]: "Title Too Short",
+  [IssueType.SEO_LONG_TITLE]: "Title Too Long",
+  [IssueType.SEO_MISSING_META_DESC]: "Missing Meta Description",
+  [IssueType.SEO_SHORT_META_DESC]: "Meta Description Too Short",
+  [IssueType.SEO_LONG_META_DESC]: "Meta Description Too Long",
+  [IssueType.SEO_MISSING_CANONICAL]: "Missing Canonical URL",
+  [IssueType.SEO_AI_CRAWLER_BLOCKED]: "AI Crawler Blocked",
 };
 
 const SEVERITY_LABELS = {

@@ -17,6 +17,8 @@ const { JoomlaAnalyzer } = require("./analyzers/joomla-analyzer");
 const { PaymentAnalyzer } = require("./analyzers/payment-analyzer");
 const { PerformanceAnalyzer } = require("./analyzers/performance-analyzer");
 const { DynamicAnalyzer } = require("./analyzers/dynamic-analyzer");
+const { SchemaAnalyzer } = require("./analyzers/schema-analyzer");
+const { SEOAnalyzer } = require("./analyzers/seo-analyzer");
 
 class Crawler extends EventEmitter {
   constructor(config) {
@@ -49,6 +51,8 @@ class Crawler extends EventEmitter {
     this.formAnalyzer = config.skipForms ? null : new FormAnalyzer();
     this.joomlaAnalyzer = config.skipJoomla ? null : new JoomlaAnalyzer();
     this.performanceAnalyzer = config.skipPerformance ? null : new PerformanceAnalyzer();
+    this.schemaAnalyzer = config.skipSchema ? null : new SchemaAnalyzer();
+    this.seoAnalyzer = config.skipSeo ? null : new SEOAnalyzer();
     this.dynamicAnalyzer = config.enableDynamicTesting ? new DynamicAnalyzer() : null;
 
     // Stats
@@ -144,6 +148,20 @@ class Crawler extends EventEmitter {
             htmlContent: result.content,
           });
           pageIssues.push(...perfIssues);
+        }
+
+        if (this.schemaAnalyzer) {
+          const schemaIssues = await this.schemaAnalyzer.analyze(url, {
+            htmlContent: result.content,
+          });
+          pageIssues.push(...schemaIssues);
+        }
+
+        if (this.seoAnalyzer) {
+          const seoIssues = await this.seoAnalyzer.analyze(url, {
+            htmlContent: result.content,
+          });
+          pageIssues.push(...seoIssues);
         }
 
         if (this.dynamicAnalyzer && this.dynamicAnalyzer.isAvailable) {

@@ -791,6 +791,12 @@ select:focus { border-color: var(--purple); }
             <label class="checkbox-label">
               <input type="checkbox" id="opt-skip-performance"> Skip performance checks
             </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="opt-skip-schema"> Skip schema markup checks
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="opt-skip-seo"> Skip SEO checks
+            </label>
           </div>
         </div>
 
@@ -1104,6 +1110,8 @@ select:focus { border-color: var(--purple); }
       skip_forms: document.getElementById("opt-skip-forms").checked,
       skip_joomla: document.getElementById("opt-skip-joomla").checked,
       skip_performance: document.getElementById("opt-skip-performance").checked,
+      skip_schema: document.getElementById("opt-skip-schema").checked,
+      skip_seo: document.getElementById("opt-skip-seo").checked,
       skip_dynamic: !document.getElementById("opt-dynamic").checked,
     };
 
